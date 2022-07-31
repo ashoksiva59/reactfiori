@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reactfiori
+  labels:
+    app: reactfiori
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reactfiori
+  template:
+    metadata:
+      labels:
+        app: reactfiori
+    spec:
+      containers:
+      - name: reactfiori
+        image: docker.io/ashoksiva59/sapreactfiori-image:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+            limits:
+              memory: 550Mi
+              cpu: 500m
+            requests:
+              cpu: 500m
+              memory: 550Mi
+      imagePullSecrets:
+      - name: doeckerregcred
+status: {}
+      
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reactfiori
+spec:
+  selector:
+    app: reactfiori
+  ports:
+  - port: 3050
+    targetPort: 3000
+    protocol: TCP
+
+---
+
+apiVersion: gateway.kyma-project.io/v1alpha1
+kind: APIRule
+metadata:
+  name: reactfiori
+spec:
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  service:
+    name: reactfiori
+    port: 8080
+    host: reactfiori
+  rules:
+    - path: /.*
+      methods: ["GET"]
+      accessStrategies:
+        - handler: noop
+          config: {}
